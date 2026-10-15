@@ -385,3 +385,36 @@ def test_execute_plan_includes_planner_token_usage(llm):
     # The SwarmResult should combine the Planner (100/50) + the Agent (10/5)
     assert result.usage.prompt_tokens == 110
     assert result.usage.completion_tokens == 55
+# -----------------------------------------------------------
+# tests whether the kwargs reach the LLM call (for issue #6)
+# -----------------------------------------------------------
+
+def _find_pC(llm):
+    for call in llm.calls:
+        if call.get("response_format") == {"type": "json_object"}:
+            return call
+        raise AssertionError("Planner call was not found within specified LLM call log")
+
+# test 1 checks whether the default planner kwargs reach the LLM
+def test_default_planner_kwargs(llm):
+    llm.queue(plan_response([]))
+    make_swarm().execute_plan("write alphabet")
+    pCall = _find_pC(llm)
+    assert pCall["num_retries"] == 3
+    assert pCall["timeout"] == 60
+
+# test 2 checks whether the user specified planner kwargs reach the LLM
+def test_user_specified_planner_kwargs(llm):
+    llm.queue(plan_response([]))
+    make_swarm(planner_kwargs={"num_retries": 6, "timeout": 100}).execute_plan("write alphabet")
+    pCall = _find_pC(llm)
+    assert pCall["num_retries"] == 6
+    assert pCall["timeout"] == 100
+
+# test 3 checks whether both the default and user specified planner kwargs reach the LLM
+def test_planner_kwargs(llm):
+    llm.queue(plan_response([]))
+    make_swarm(planner_kwargs={"timeout": 100}).execute_plan("write alphabet")
+    pCall = _find_pC(llm)
+    assert pCall["num_retries"] == 3
+    assert pCall["timeout"] == 100
