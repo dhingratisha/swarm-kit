@@ -37,6 +37,11 @@ class AgentOutput(BaseModel):
             ]
         return message
 
+class UsageStats(BaseModel):
+    """Tracks token usage and cost for LLM calls."""
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    cost: float = 0.0
 
 class SwarmResult(BaseModel):
     """Returned by every ``Swarm.execute*`` method."""
@@ -48,6 +53,7 @@ class SwarmResult(BaseModel):
     turns: int = 0
     plan: Optional[List[Dict[str, Any]]] = None
     session_id: Optional[str] = None
+    usage: UsageStats = Field(default_factory=UsageStats)
 
 
 @dataclass

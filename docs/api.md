@@ -108,6 +108,7 @@ A Pydantic model returned by every `execute*` method.
 | `turns` | `int` | Number of LLM calls made by agents. |
 | `plan` | `list[dict] \| None` | Validated plan (supervised mode only). |
 | `session_id` | `str \| None` | The session ID, if one was given. |
+| `usage` | `UsageStats` | Total tokens and cost across all LLM calls in the run. |
 
 ## `AgentOutput`
 

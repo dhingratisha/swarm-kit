@@ -310,3 +310,78 @@ async def test_execute_plan_async_uses_async_planner_and_saves(llm):
     result = await swarm.execute_plan_async("refund", session_id="job1")
     assert result.final_output == "done"
     assert "job1" in saved
+
+def test_tracks_token_usage_and_response_events(llm, tmp_path):
+    events = []
+    log = tmp_path / "run.jsonl"
+    swarm = make_swarm(log_file=str(log), event_handler=events.append)
+
+    # Queue two turns with token usage
+    llm.queue(
+        make_response("First answer", usage={"prompt_tokens": 20, "completion_tokens": 10}),
+        make_response("Second answer", usage={"prompt_tokens": 15, "completion_tokens": 5}),
+    )
+
+    result1 = swarm.execute("Triage", "Query 1")
+    assert result1.usage.prompt_tokens == 20
+    assert result1.usage.completion_tokens == 10
+
+    result2 = swarm.execute("Triage", "Query 2")
+    assert result2.usage.prompt_tokens == 15
+    assert result2.usage.completion_tokens == 5
+
+    # Verify per-call usage on Response event
+    response_events = [e for e in events if e["action"] == "Response"]
+    assert len(response_events) == 2
+    assert response_events[0]["usage"]["prompt_tokens"] == 20
+    assert response_events[0]["usage"]["completion_tokens"] == 10
+    assert response_events[1]["usage"]["prompt_tokens"] == 15
+    assert response_events[1]["usage"]["completion_tokens"] == 5
+
+def test_token_usage_accumulates_across_tool_calls(llm):
+    events = []
+    swarm = make_swarm(event_handler=events.append)
+
+    # Turn 1: Agent calls a tool silently (no text)
+    # Turn 2: Agent replies with final text
+    llm.queue(
+        make_response(
+            None,
+            [tool_call("update_state", {"key": "x", "value": "1"}, "t1")],
+            usage={"prompt_tokens": 10, "completion_tokens": 5}
+        ),
+        make_response("Final text", usage={"prompt_tokens": 20, "completion_tokens": 10}),
+    )
+
+    result = swarm.execute("Triage", "do it")
+
+    # The SwarmResult should have the combined total of both turns
+    assert result.usage.prompt_tokens == 30
+    assert result.usage.completion_tokens == 15
+
+    # Verify the silent tool call still emitted a Response event with its tokens
+    responses = [e for e in events if e["action"] == "Response"]
+    assert len(responses) == 2
+    assert responses[0]["content"] == ""
+    assert responses[0]["usage"]["prompt_tokens"] == 10
+    assert responses[1]["content"] == "Final text"
+    assert responses[1]["usage"]["prompt_tokens"] == 20
+
+
+def test_execute_plan_includes_planner_token_usage(llm):
+    swarm = make_swarm()
+
+    # Queue the Supervisor/Planner's response, then the Agent's response
+    llm.queue(
+        make_response(
+            json.dumps({"plan": [{"agent_name": "Triage", "task": "help"}]}),
+            usage={"prompt_tokens": 100, "completion_tokens": 50}
+        ),
+        make_response("Task done", usage={"prompt_tokens": 10, "completion_tokens": 5})
+    )
+
+    result = swarm.execute_plan("I need help")
+
+    # The SwarmResult should combine the Planner (100/50) + the Agent (10/5)
+    assert result.usage.prompt_tokens == 110
+    assert result.usage.completion_tokens == 55

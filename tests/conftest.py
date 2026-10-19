@@ -12,7 +12,11 @@ def tool_call(name: str, arguments: Any, call_id: Optional[str] = None) -> Dict[
     return {"id": call_id or f"call_{name}", "name": name, "arguments": args}
 
 
-def make_response(content: Optional[str] = None, tool_calls: Optional[List[Dict[str, Any]]] = None):
+def make_response(
+    content: Optional[str] = None,
+    tool_calls: Optional[List[Dict[str, Any]]] = None,
+    usage: Optional[Dict[str, Any]] = None,
+):
     calls = None
     if tool_calls:
         calls = [
@@ -20,7 +24,8 @@ def make_response(content: Optional[str] = None, tool_calls: Optional[List[Dict[
             for c in tool_calls
         ]
     message = SimpleNamespace(content=content, tool_calls=calls)
-    return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+    usage_obj = SimpleNamespace(**usage) if usage else None
+    return SimpleNamespace(choices=[SimpleNamespace(message=message)], usage=usage_obj)
 
 
 class FakeLLM:

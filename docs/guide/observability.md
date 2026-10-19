@@ -21,7 +21,7 @@ Every step produces an **event** dict:
 | --- | --- | --- |
 | `Start` | A run begins | |
 | `Plan` | The planner returned a plan (supervised mode) | `plan` |
-| `Response` | An agent replied with text | |
+| `Response` | An agent replied with text | `usage` |
 | `Tool` | A user tool is about to run | `tool` |
 | `ToolResult` | A user tool returned | `tool` |
 | `StateUpdate` | `update_state` was called | `key`, `value` |
