@@ -18,7 +18,7 @@ All notable changes to this project are documented here. The format is based on
   a worker thread (`asyncio.to_thread`) during `execute_async()`/`execute_plan_async()`, so
   blocking tools no longer stall the event loop and concurrent runs can have them in flight at
   the same time. `async def` tools are still awaited on the event loop.
-- Agent accepts `num_retries` and `timeout` as first-class parameters; the planner defaults to
+- `Agent` accepts `num_retries` and `timeout` as first-class parameters; the planner defaults to
   `num_retries=3, timeout=60`
 
 ### Changed
