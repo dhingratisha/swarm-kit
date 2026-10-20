@@ -18,27 +18,18 @@ All notable changes to this project are documented here. The format is based on
   a worker thread (`asyncio.to_thread`) during `execute_async()`/`execute_plan_async()`, so
   blocking tools no longer stall the event loop and concurrent runs can have them in flight at
   the same time. `async def` tools are still awaited on the event loop.
-- `num_retries` and `timeout`first class parameters in agent.py
-- `DEFAULT_PLANNER_KWARGS` in swarm.py to create sensible defaults for the planner call
-- `_find_pC`, `test_default_planner_kwargs(llm)`, `test_user_specified_planner_kwargs(llm)` and `test_planner_kwargs(llm)` for testing 
-- whether the kwargs reach the LLM call in test_swarm.py
-- documented the model_kwargs route in providers.md
+- Agent accepts `num_retries` and `timeout` as first-class parameters; the planner defaults to
+  `num_retries=3, timeout=60`
 
 ### Changed
 - `Agent(require_approval=...)` accepts a single tool name as a string (so
   `require_approval="process_refund"` gates that one tool). Other non-collection types
-  raise `TypeError` naming the bad type.
+   raise `TypeError` naming the bad type.
 - `update_state` decodes JSON-encoded string values, supporting numbers, booleans,
   lists, objects and null. Non-JSON text, including `NaN`, `Infinity` and
   `-Infinity`, remains unchanged.
 - Numeric-looking strings such as IDs are now stored as numbers; send them as
   JSON strings (`'"12345"'`) to keep them as text.
-- changed the `_build_kwargs` allowing it to merge the newly created parameters `num_retries` and 
- `timeout` into a copy of model_kwargs. The code implemented only sets these parameters if not 
- already present in order to give precedence to model_kwargs. Following this piece of code, the resulting merged 
- dict is spread into the LiteLLM call kwargs in place of self.model_kwargs
-- changed `_planner_kwargs` via the addition of `DEFAULT_PLANNER_KWARGS` allowing the planner call to use defaults
- in the case suitable user inputs are not provided. However, this change allows sensible user inputs to override the defaults.
 
 ## [0.2.0] - 2026-10-08
 

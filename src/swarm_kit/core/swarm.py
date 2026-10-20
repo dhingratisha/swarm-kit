@@ -24,7 +24,7 @@ EventHandler = Callable[[Dict[str, Any]], Any]
 ApprovalHandler = Callable[[ApprovalRequest], Any]
 
 DEFAULT_PLANNER_KWARGS: Dict[str, Any] = {
-    "num_retries":3,
+    "num_retries": 3,
     "timeout": 60,
 }
 

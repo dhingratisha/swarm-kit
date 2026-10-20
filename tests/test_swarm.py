@@ -393,7 +393,7 @@ def _find_pC(llm):
     for call in llm.calls:
         if call.get("response_format") == {"type": "json_object"}:
             return call
-        raise AssertionError("Planner call was not found within specified LLM call log")
+    raise AssertionError("Planner call was not found within specified LLM call log")
 
 # test 1 checks whether the default planner kwargs reach the LLM
 def test_default_planner_kwargs(llm):
@@ -418,3 +418,22 @@ def test_planner_kwargs(llm):
     pCall = _find_pC(llm)
     assert pCall["num_retries"] == 3
     assert pCall["timeout"] == 100
+
+
+# test 4 checks whether agent keys reach the LLM
+def test_agent(llm):
+    agent = Agent(name="Agent A", instructions="abc", num_retries=5, timeout=50)
+    llm.queue(make_response("alphabet!"))
+    Swarm(agents=[agent], verbose=False).execute("Agent A","action!")
+    call = llm.calls[0]
+    assert call["num_retries"] == 5
+    assert call["timeout"] == 50
+
+# test 5 checks whether model_kwargs overrides the agent keys in reaching the LLM
+def test_model_kwargs_overrides(llm):
+    agent = Agent(name="Agent B", instructions="123",num_retries=5, timeout=50, model_kwargs={"num_retries": 10, "timeout": 100})
+    llm.queue(make_response("numbers!"))
+    Swarm(agents=[agent], verbose=False).execute("Agent B","action!")
+    call = llm.calls[0]
+    assert call["num_retries"] == 10
+    assert call["timeout"] == 100

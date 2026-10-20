@@ -19,11 +19,8 @@ See the [LiteLLM provider list](https://docs.litellm.ai/docs/providers) for the 
 Each agent picks its own model. A common pattern is a cheap, fast model for routing and a
 stronger one for the actual work:
 
-class Agent:
-pass
-
 ```python
- triage = Agent(name="Triage", instructions="...", model="gpt-4o-mini")
+triage = Agent(name="Triage", instructions="...", model="gpt-4o-mini")
 analyst = Agent(name="Analyst", instructions="...", model="anthropic/claude-sonnet-4-5")
 
 swarm = Swarm(agents=[triage, analyst], planner_model="gpt-4o-mini")

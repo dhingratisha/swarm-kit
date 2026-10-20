@@ -68,7 +68,7 @@ class Agent:
         model_kwargs: Optional[Dict[str, Any]] = None,
         require_approval: Optional[Union[str, Iterable[str]]] = None,
         num_retries: Optional[int] = None,
-        timeout: Optional[float] = None
+        timeout: Optional[float] = None,
     ):
         self.name = name
         self.instructions = instructions
@@ -156,7 +156,7 @@ class Agent:
         if self.timeout is not None and "timeout" not in merged:
             merged["timeout"] = self.timeout
         kwargs: Dict[str, Any] = {
-            ** merged,
+            **merged,
             "model": self.model,
             "messages": [{"role": "system", "content": system_content}] + messages,
         }
